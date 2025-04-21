@@ -2,6 +2,7 @@ const router = require('express').Router();
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const {requireLogin} = require('../middleware/auth');
 
 router.post('/register', async(req,res)=>{
     const {name,email,password} = req.body;
@@ -29,7 +30,7 @@ router.post('/register', async(req,res)=>{
 
 //login route
 router.post('/login', async (req,res)=>{
-    const {email, password} = req.bdy;
+    const {email, password} = req.body;
     try {
         const user = await User.findOne({email});
         if(!user){
@@ -43,11 +44,25 @@ router.post('/login', async (req,res)=>{
             _id: user._id}, 
             process.env.TOKEN_SECRET, 
             {expiresIn: '1hr'});
-        return res.json(token);
+        return res.json({token});
     } catch (error) {
         console.error(error);
         res.status(500).json({message: "Internal server error"});
     }
 })
+
+//setting a protected route
+router.get('/', requireLogin, async (req, res)=>{
+    try {
+        const user = await User.findById(req.user._id).select("-password");
+        if(!user){
+            return res.status(400).json({message: "User not found"});
+        }
+        res.json(user);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({message: "Internal server error"});
+    }
+} )
 
 module.exports = router;
