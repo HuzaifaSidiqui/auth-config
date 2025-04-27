@@ -5,9 +5,9 @@ const jwt = require('jsonwebtoken');
 const {requireLogin} = require('../middleware/auth');
 
 router.post('/register', async(req,res)=>{
-    const {name,email,password} = req.body;
+    const {username,email,password} = req.body;
     try {
-        if(!name || !email || !password){
+        if(!username || !email || !password){
             return res.status(400).json({message: "All fields are required"})
         }
         const existingUser = await User.findOne({email});
@@ -16,7 +16,7 @@ router.post('/register', async(req,res)=>{
         }
         const hashed_password = await bcrypt.hash(password, 10);
         const newUser = new User({
-            name,
+            username,
             email,
             password: hashed_password
         })
